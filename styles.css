@@ -861,3 +861,16 @@ body {
 .blog-tags {
     margin-bottom: 1rem;
 }
+
+/* Smaller stat boxes */
+.stat {
+    padding: 1rem 1.25rem;
+}
+
+.stat-number {
+    font-size: 1.75rem;
+}
+
+.stat-label {
+    font-size: 0.8rem;
+}
