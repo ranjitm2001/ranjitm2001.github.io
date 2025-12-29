@@ -1,0 +1,138 @@
+<\!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blog | Ranjith Muniyappa</title>
+    <meta name="description" content="Technical blogs, learnings, and insights from Ranjith Muniyappa - Engineering Lead">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="index.html" class="nav-logo">RM</a>
+            <ul class="nav-menu">
+                <li><a href="index.html#about">About</a></li>
+                <li><a href="index.html#experience">Experience</a></li>
+                <li><a href="index.html#opensource">Open Source</a></li>
+                <li><a href="blogs.html" class="active">Blog</a></li>
+                <li><a href="index.html#contact">Contact</a></li>
+                <li>
+                    <button class="theme-toggle" aria-label="Toggle theme">
+                        <i class="fas fa-moon"></i>
+                        <i class="fas fa-sun"></i>
+                    </button>
+                </li>
+            </ul>
+            <div class="nav-actions">
+                <button class="theme-toggle mobile-theme" aria-label="Toggle theme">
+                    <i class="fas fa-moon"></i>
+                    <i class="fas fa-sun"></i>
+                </button>
+                <button class="nav-toggle" aria-label="Toggle menu">
+                    <span></span><span></span><span></span>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <section class="blog-hero">
+        <div class="container">
+            <h1 class="section-title">Blog</h1>
+            <p class="section-subtitle">Recent work, learnings, and technical insights</p>
+        </div>
+    </section>
+
+    <section class="section">
+        <div class="container">
+            <div class="blog-grid" id="blog-posts"></div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2024 Ranjith Muniyappa. Built with passion.</p>
+        </div>
+    </footer>
+
+    <script>
+    // Theme Toggle
+    function initTheme() {
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+    }
+    function toggleTheme() {
+        const currentTheme = document.documentElement.getAttribute('data-theme');
+        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', newTheme);
+        localStorage.setItem('theme', newTheme);
+    }
+    initTheme();
+
+    // Blog Posts Data
+    const blogPosts = [
+        {
+            title: "Contributing to Spring AI: My Open Source Journey",
+            date: "December 29, 2024",
+            tags: ["Open Source", "Spring AI", "Java"],
+            excerpt: "How I submitted 4 PRs to Spring AI and learned about AI integration in the Spring ecosystem. Tips for getting started with open source contributions.",
+            slug: "spring-ai-contributions"
+        },
+        {
+            title: "Adding UDP Port Mapping to Testcontainers",
+            date: "December 29, 2024",
+            tags: ["Open Source", "Testcontainers", "Docker"],
+            excerpt: "Deep dive into implementing UDP protocol support for getMappedPort in Testcontainers Java. Understanding Docker networking and container port mapping.",
+            slug: "testcontainers-udp-support"
+        },
+        {
+            title: "Building Scalable ETL Pipelines with Spark",
+            date: "December 2024",
+            tags: ["Data Engineering", "Spark", "AWS"],
+            excerpt: "Lessons learned from building ETL pipelines that process 250M+ records. Optimization techniques that achieved 3x improvement in processing speed.",
+            slug: "scalable-etl-pipelines"
+        },
+        {
+            title: "From Mechanical Engineering to Software: My Career Journey",
+            date: "November 2024",
+            tags: ["Career", "Engineering"],
+            excerpt: "How I transitioned from a Mechanical Engineering degree at NITK to becoming an Engineering Lead in software. Key lessons and pivotal moments.",
+            slug: "career-journey"
+        }
+    ];
+
+    // Render Blog Posts
+    function renderBlogPosts() {
+        const container = document.getElementById('blog-posts');
+        container.innerHTML = blogPosts.map(post => `
+            <article class="blog-card">
+                <div class="blog-card-content">
+                    <div class="blog-meta">
+                        <span class="blog-date"><i class="far fa-calendar"></i> ${post.date}</span>
+                    </div>
+                    <h2 class="blog-title">${post.title}</h2>
+                    <p class="blog-excerpt">${post.excerpt}</p>
+                    <div class="blog-tags">
+                        ${post.tags.map(tag => `<span class="blog-tag">${tag}</span>`).join('')}
+                    </div>
+                </div>
+            </article>
+        `).join('');
+    }
+
+    // Mobile Navigation
+    document.querySelector('.nav-toggle').addEventListener('click', () => {
+        document.querySelector('.nav-menu').classList.toggle('active');
+    });
+    document.querySelectorAll('.theme-toggle').forEach(btn => {
+        btn.addEventListener('click', toggleTheme);
+    });
+
+    document.addEventListener('DOMContentLoaded', renderBlogPosts);
+    </script>
+</body>
+</html>
