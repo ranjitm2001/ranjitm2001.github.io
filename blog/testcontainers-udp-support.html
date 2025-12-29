@@ -1,0 +1,211 @@
+<\!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Adding UDP Port Mapping to Testcontainers | Ranjith Muniyappa</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="../index.html" class="nav-logo">RM</a>
+            <ul class="nav-menu">
+                <li><a href="../index.html#about">About</a></li>
+                <li><a href="../index.html#experience">Experience</a></li>
+                <li><a href="../blogs.html" class="active">Blog</a></li>
+                <li><a href="../index.html#contact">Contact</a></li>
+                <li>
+                    <button class="theme-toggle" aria-label="Toggle theme">
+                        <i class="fas fa-moon"></i>
+                        <i class="fas fa-sun"></i>
+                    </button>
+                </li>
+            </ul>
+            <div class="nav-actions">
+                <button class="theme-toggle mobile-theme" aria-label="Toggle theme">
+                    <i class="fas fa-moon"></i>
+                    <i class="fas fa-sun"></i>
+                </button>
+                <button class="nav-toggle" aria-label="Toggle menu">
+                    <span></span><span></span><span></span>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <article class="blog-post">
+        <div class="container">
+            <a href="../blogs.html" class="back-link"><i class="fas fa-arrow-left"></i> Back to Blog</a>
+            
+            <header class="post-header">
+                <h1>Adding UDP Port Mapping to Testcontainers</h1>
+                <div class="post-meta">
+                    <span><i class="far fa-calendar"></i> December 29, 2024</span>
+                    <span><i class="far fa-clock"></i> 6 min read</span>
+                </div>
+                <div class="blog-tags">
+                    <span class="blog-tag">Open Source</span>
+                    <span class="blog-tag">Testcontainers</span>
+                    <span class="blog-tag">Docker</span>
+                </div>
+            </header>
+
+            <div class="post-content">
+                <h2>The Problem</h2>
+                <p>
+                    Testcontainers is an amazing library for integration testing with Docker containers. However, there was 
+                    a long-standing issue (#554) - the <code>getMappedPort()</code> method only supported TCP ports, not UDP.
+                </p>
+                <p>
+                    This was problematic for developers testing applications that use UDP protocols like DNS servers, 
+                    game servers, VoIP applications, or any real-time streaming services.
+                </p>
+
+                <h2>Understanding Docker Port Mapping</h2>
+                <p>
+                    Docker supports both TCP and UDP port mappings. When you run a container, you can expose ports like:
+                </p>
+                <pre><code># TCP port (default)
+docker run -p 8080:80 nginx
+
+# UDP port
+docker run -p 53:53/udp dns-server
+
+# Both TCP and UDP on same port
+docker run -p 53:53/tcp -p 53:53/udp dns-server</code></pre>
+                <p>
+                    The Docker API returns port bindings with protocol information, but Testcontainers was ignoring the 
+                    protocol and assuming everything was TCP.
+                </p>
+
+                <h2>The Solution</h2>
+                <p>I implemented a new overloaded method that accepts the protocol:</p>
+
+                <h3>API Design</h3>
+                <pre><code>// Existing method (TCP only)
+Integer getMappedPort(int originalPort);
+
+// New method with protocol support
+Integer getMappedPort(int originalPort, InternetProtocol protocol);
+
+// New method to expose UDP ports
+void addExposedPort(int port, InternetProtocol protocol);</code></pre>
+
+                <h3>Implementation in ContainerState.java</h3>
+                <pre><code>default Integer getMappedPort(int originalPort, InternetProtocol protocol) {
+    Preconditions.checkState(
+        isRunning(), 
+        "Container must be running to get mapped port"
+    );
+    
+    Ports.Binding[] bindings = getContainerInfo()
+        .getNetworkSettings()
+        .getPorts()
+        .getBindings()
+        .get(new ExposedPort(originalPort, protocol));
+    
+    if (bindings == null || bindings.length == 0) {
+        throw new IllegalArgumentException(
+            "No mapped port for " + originalPort + "/" + protocol
+        );
+    }
+    
+    return Integer.valueOf(bindings[0].getHostPortSpec());
+}</code></pre>
+
+                <h3>Implementation in GenericContainer.java</h3>
+                <pre><code>public void addExposedPort(int port, InternetProtocol protocol) {
+    exposedPorts.add(new ExposedPort(port, protocol));
+}</code></pre>
+
+                <h2>Testing the Implementation</h2>
+                <p>I wrote comprehensive unit tests using Mockito to verify the behavior:</p>
+                <pre><code>@Test
+void shouldReturnMappedUdpPort() {
+    // Setup mock container with UDP port binding
+    when(containerInfo.getNetworkSettings()
+        .getPorts()
+        .getBindings()
+        .get(new ExposedPort(53, InternetProtocol.UDP)))
+        .thenReturn(new Ports.Binding[]{
+            new Ports.Binding("0.0.0.0", "32853")
+        });
+    
+    // Verify UDP port mapping works
+    Integer mappedPort = container.getMappedPort(53, InternetProtocol.UDP);
+    assertThat(mappedPort).isEqualTo(32853);
+}
+
+@Test
+void shouldThrowWhenUdpPortNotMapped() {
+    when(containerInfo.getNetworkSettings()
+        .getPorts()
+        .getBindings()
+        .get(any()))
+        .thenReturn(null);
+    
+    assertThatThrownBy(() -> 
+        container.getMappedPort(53, InternetProtocol.UDP)
+    ).isInstanceOf(IllegalArgumentException.class);
+}</code></pre>
+
+                <h2>Backward Compatibility</h2>
+                <p>
+                    The existing <code>getMappedPort(int)</code> method continues to work as before, defaulting to TCP. 
+                    This ensures that existing code doesn't break:
+                </p>
+                <pre><code>// Still works - assumes TCP
+container.getMappedPort(8080);
+
+// New - explicitly specify protocol
+container.getMappedPort(53, InternetProtocol.UDP);</code></pre>
+
+                <h2>Key Learnings</h2>
+                <ul>
+                    <li><strong>Docker internals:</strong> Understanding how Docker handles port bindings at the API level</li>
+                    <li><strong>API design:</strong> Adding new functionality without breaking existing users</li>
+                    <li><strong>Test isolation:</strong> Using mocks for unit tests when Docker isn't available</li>
+                    <li><strong>Protocol handling:</strong> TCP vs UDP networking differences</li>
+                </ul>
+
+                <h2>Links</h2>
+                <ul>
+                    <li><a href="https://github.com/testcontainers/testcontainers-java/issues/554" target="_blank">Original Issue #554</a></li>
+                    <li><a href="https://github.com/testcontainers/testcontainers-java/pull/11377" target="_blank">My PR #11377</a></li>
+                </ul>
+            </div>
+        </div>
+    </article>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2024 Ranjith Muniyappa. Built with passion.</p>
+        </div>
+    </footer>
+
+    <script>
+    function initTheme() {
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+    }
+    function toggleTheme() {
+        const currentTheme = document.documentElement.getAttribute('data-theme');
+        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', newTheme);
+        localStorage.setItem('theme', newTheme);
+    }
+    initTheme();
+    document.querySelector('.nav-toggle').addEventListener('click', () => {
+        document.querySelector('.nav-menu').classList.toggle('active');
+    });
+    document.querySelectorAll('.theme-toggle').forEach(btn => {
+        btn.addEventListener('click', toggleTheme);
+    });
+    </script>
+</body>
+</html>

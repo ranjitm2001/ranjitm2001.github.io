@@ -1,0 +1,246 @@
+<\!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Building Scalable ETL Pipelines with Spark | Ranjith Muniyappa</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="../index.html" class="nav-logo">RM</a>
+            <ul class="nav-menu">
+                <li><a href="../index.html#about">About</a></li>
+                <li><a href="../index.html#experience">Experience</a></li>
+                <li><a href="../blogs.html" class="active">Blog</a></li>
+                <li><a href="../index.html#contact">Contact</a></li>
+                <li>
+                    <button class="theme-toggle" aria-label="Toggle theme">
+                        <i class="fas fa-moon"></i>
+                        <i class="fas fa-sun"></i>
+                    </button>
+                </li>
+            </ul>
+            <div class="nav-actions">
+                <button class="theme-toggle mobile-theme" aria-label="Toggle theme">
+                    <i class="fas fa-moon"></i>
+                    <i class="fas fa-sun"></i>
+                </button>
+                <button class="nav-toggle" aria-label="Toggle menu">
+                    <span></span><span></span><span></span>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <article class="blog-post">
+        <div class="container">
+            <a href="../blogs.html" class="back-link"><i class="fas fa-arrow-left"></i> Back to Blog</a>
+            
+            <header class="post-header">
+                <h1>Building Scalable ETL Pipelines with Spark</h1>
+                <div class="post-meta">
+                    <span><i class="far fa-calendar"></i> December 2024</span>
+                    <span><i class="far fa-clock"></i> 8 min read</span>
+                </div>
+                <div class="blog-tags">
+                    <span class="blog-tag">Data Engineering</span>
+                    <span class="blog-tag">Spark</span>
+                    <span class="blog-tag">AWS</span>
+                </div>
+            </header>
+
+            <div class="post-content">
+                <h2>The Challenge</h2>
+                <p>
+                    At Osfin.ai, we faced a significant data engineering challenge: processing up to 250 million records 
+                    daily for our dispute management system. The existing pipeline was slow, error-prone, and couldn't 
+                    scale with growing data volumes.
+                </p>
+                <p>
+                    Our goal was to achieve <strong>3x improvement in processing speed</strong> while maintaining data 
+                    quality and reducing operational overhead.
+                </p>
+
+                <h2>Architecture Overview</h2>
+                <p>We designed a distributed ETL pipeline using Apache Spark on AWS EMR:</p>
+                <pre><code>┌─────────────┐     ┌─────────────┐     ┌─────────────┐
+│   S3 Raw    │────▶│  Spark EMR  │────▶│  S3 Clean   │
+│    Data     │     │  Processing │     │    Data     │
+└─────────────┘     └─────────────┘     └─────────────┘
+                           │
+                           ▼
+                    ┌─────────────┐
+                    │  Redshift   │
+                    │  Warehouse  │
+                    └─────────────┘</code></pre>
+
+                <h2>Key Optimizations</h2>
+
+                <h3>1. Partitioning Strategy</h3>
+                <p>
+                    The single most impactful optimization was proper data partitioning. We partitioned data by date 
+                    and customer_id, which matched our query patterns:
+                </p>
+                <pre><code>df.write \
+  .partitionBy("date", "customer_id") \
+  .parquet("s3://bucket/processed/")</code></pre>
+                <p>This reduced query times by 70% for date-range queries.</p>
+
+                <h3>2. Broadcast Joins</h3>
+                <p>
+                    For joining large transaction tables with smaller reference data (like customer metadata), 
+                    we used broadcast joins:
+                </p>
+                <pre><code>from pyspark.sql.functions import broadcast
+
+result = transactions.join(
+    broadcast(customer_metadata),
+    "customer_id"
+)</code></pre>
+                <p>This eliminated expensive shuffle operations for small tables under 100MB.</p>
+
+                <h3>3. Caching Intermediate Results</h3>
+                <pre><code># Cache frequently accessed DataFrames
+validated_data = raw_data.filter(col("status").isNotNull())
+validated_data.cache()
+
+# Use for multiple downstream operations
+summary = validated_data.groupBy("category").count()
+details = validated_data.filter(col("amount") > 1000)</code></pre>
+
+                <h3>4. Optimized File Sizes</h3>
+                <p>
+                    Small files are a killer for Spark performance. We coalesced output to optimal file sizes:
+                </p>
+                <pre><code># Target ~128MB per file
+target_size_mb = 128
+current_size_mb = df.count() * avg_row_size / (1024 * 1024)
+num_partitions = max(1, int(current_size_mb / target_size_mb))
+
+df.coalesce(num_partitions).write.parquet(output_path)</code></pre>
+
+                <h3>5. Predicate Pushdown</h3>
+                <p>
+                    When reading Parquet files, we pushed filters down to the file read level:
+                </p>
+                <pre><code># Filter is pushed to Parquet reader
+df = spark.read.parquet("s3://bucket/data/") \
+    .filter(col("date") >= "2024-01-01") \
+    .filter(col("status") == "ACTIVE")</code></pre>
+
+                <h2>Handling Data Quality</h2>
+                <p>We implemented a multi-layer validation approach:</p>
+                <pre><code>def validate_record(row):
+    errors = []
+    
+    # Required fields
+    if row.customer_id is None:
+        errors.append("missing_customer_id")
+    
+    # Data type validation
+    if not isinstance(row.amount, (int, float)):
+        errors.append("invalid_amount_type")
+    
+    # Business rules
+    if row.amount < 0:
+        errors.append("negative_amount")
+    
+    return errors
+
+# Separate valid and invalid records
+df_with_errors = df.withColumn(
+    "validation_errors", 
+    validate_udf(struct(*df.columns))
+)
+
+valid_records = df_with_errors.filter(size("validation_errors") == 0)
+invalid_records = df_with_errors.filter(size("validation_errors") > 0)</code></pre>
+
+                <h2>Monitoring and Alerting</h2>
+                <p>We built comprehensive monitoring using CloudWatch:</p>
+                <ul>
+                    <li><strong>Processing time per batch:</strong> Alert if > 2x baseline</li>
+                    <li><strong>Record count validation:</strong> Alert if deviation > 10%</li>
+                    <li><strong>Error rate:</strong> Alert if > 1% of records fail validation</li>
+                    <li><strong>S3 data lag:</strong> Alert if data older than 4 hours</li>
+                </ul>
+
+                <h2>Results</h2>
+                <table>
+                    <tr>
+                        <th>Metric</th>
+                        <th>Before</th>
+                        <th>After</th>
+                        <th>Improvement</th>
+                    </tr>
+                    <tr>
+                        <td>Processing Time (250M records)</td>
+                        <td>6 hours</td>
+                        <td>2 hours</td>
+                        <td>3x faster</td>
+                    </tr>
+                    <tr>
+                        <td>Cost per Run</td>
+                        <td>$150</td>
+                        <td>$60</td>
+                        <td>60% savings</td>
+                    </tr>
+                    <tr>
+                        <td>Error Rate</td>
+                        <td>2.5%</td>
+                        <td>0.3%</td>
+                        <td>88% reduction</td>
+                    </tr>
+                    <tr>
+                        <td>Manual Interventions/Week</td>
+                        <td>5</td>
+                        <td>0</td>
+                        <td>Eliminated</td>
+                    </tr>
+                </table>
+
+                <h2>Lessons Learned</h2>
+                <ol>
+                    <li><strong>Profile before optimizing:</strong> Use Spark UI to identify actual bottlenecks</li>
+                    <li><strong>Right-size your cluster:</strong> More nodes isn't always better</li>
+                    <li><strong>Data skew kills performance:</strong> Monitor partition sizes</li>
+                    <li><strong>Test at scale:</strong> Optimizations that work on 1% of data may fail at 100%</li>
+                    <li><strong>Automate everything:</strong> Manual processes don't scale</li>
+                </ol>
+            </div>
+        </div>
+    </article>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2024 Ranjith Muniyappa. Built with passion.</p>
+        </div>
+    </footer>
+
+    <script>
+    function initTheme() {
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+    }
+    function toggleTheme() {
+        const currentTheme = document.documentElement.getAttribute('data-theme');
+        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', newTheme);
+        localStorage.setItem('theme', newTheme);
+    }
+    initTheme();
+    document.querySelector('.nav-toggle').addEventListener('click', () => {
+        document.querySelector('.nav-menu').classList.toggle('active');
+    });
+    document.querySelectorAll('.theme-toggle').forEach(btn => {
+        btn.addEventListener('click', toggleTheme);
+    });
+    </script>
+</body>
+</html>

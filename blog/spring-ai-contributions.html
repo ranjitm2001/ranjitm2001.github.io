@@ -1,0 +1,165 @@
+<\!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contributing to Spring AI | Ranjith Muniyappa</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="../index.html" class="nav-logo">RM</a>
+            <ul class="nav-menu">
+                <li><a href="../index.html#about">About</a></li>
+                <li><a href="../index.html#experience">Experience</a></li>
+                <li><a href="../blogs.html" class="active">Blog</a></li>
+                <li><a href="../index.html#contact">Contact</a></li>
+                <li>
+                    <button class="theme-toggle" aria-label="Toggle theme">
+                        <i class="fas fa-moon"></i>
+                        <i class="fas fa-sun"></i>
+                    </button>
+                </li>
+            </ul>
+            <div class="nav-actions">
+                <button class="theme-toggle mobile-theme" aria-label="Toggle theme">
+                    <i class="fas fa-moon"></i>
+                    <i class="fas fa-sun"></i>
+                </button>
+                <button class="nav-toggle" aria-label="Toggle menu">
+                    <span></span><span></span><span></span>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <article class="blog-post">
+        <div class="container">
+            <a href="../blogs.html" class="back-link"><i class="fas fa-arrow-left"></i> Back to Blog</a>
+            
+            <header class="post-header">
+                <h1>Contributing to Spring AI: My Open Source Journey</h1>
+                <div class="post-meta">
+                    <span><i class="far fa-calendar"></i> December 29, 2024</span>
+                    <span><i class="far fa-clock"></i> 5 min read</span>
+                </div>
+                <div class="blog-tags">
+                    <span class="blog-tag">Open Source</span>
+                    <span class="blog-tag">Spring AI</span>
+                    <span class="blog-tag">Java</span>
+                </div>
+            </header>
+
+            <div class="post-content">
+                <h2>Why Spring AI?</h2>
+                <p>
+                    As someone who has been working with Spring Boot for years, I was excited when Spring AI emerged as the framework 
+                    for integrating AI capabilities into Spring applications. It provides a familiar, Spring-native way to work with 
+                    various AI models including OpenAI, Anthropic, and more.
+                </p>
+                <p>
+                    I decided to contribute because I believe in giving back to the ecosystem that has helped me build countless 
+                    production systems. Plus, understanding the internals of a framework makes you a better user of it.
+                </p>
+
+                <h2>My Contributions</h2>
+                <p>I submitted 4 Pull Requests to Spring AI, each addressing different aspects of the framework:</p>
+
+                <h3>PR #5152: Fluent Builder for Message Types</h3>
+                <p>
+                    The first PR focused on improving the developer experience when constructing messages. Instead of using 
+                    constructors with multiple parameters, I introduced a fluent builder pattern:
+                </p>
+                <pre><code>// Before
+Message message = new UserMessage("Hello", List.of(media), Map.of("key", "value"));
+
+// After
+Message message = UserMessage.builder()
+    .content("Hello")
+    .media(media)
+    .metadata("key", "value")
+    .build();</code></pre>
+                <p>This makes the code more readable and less error-prone, especially when dealing with optional parameters.</p>
+
+                <h3>PR #5153: ObservationContext Handling</h3>
+                <p>
+                    This PR improved how Spring AI handles observability contexts. Proper observation is crucial for 
+                    production systems where you need to trace AI model calls, measure latencies, and debug issues.
+                </p>
+
+                <h3>PR #5154: ChatClient Builder Documentation</h3>
+                <p>
+                    Good documentation is as important as good code. This PR added comprehensive documentation for the 
+                    ChatClient builder, helping developers understand all available configuration options.
+                </p>
+
+                <h3>PR #5155: Null Safety Improvements</h3>
+                <p>
+                    Added missing null checks in ChatModel implementations to prevent NullPointerExceptions in edge cases. 
+                    Defensive programming is especially important in AI integrations where responses can be unpredictable.
+                </p>
+
+                <h2>Lessons Learned</h2>
+                <ul>
+                    <li><strong>Start small:</strong> Don't try to rewrite the whole codebase. Small, focused PRs are easier to review and merge.</li>
+                    <li><strong>Read the contribution guidelines:</strong> Every project has its own coding standards and PR process.</li>
+                    <li><strong>Engage with maintainers:</strong> Ask questions, seek feedback early, and be responsive to review comments.</li>
+                    <li><strong>Write tests:</strong> PRs without tests rarely get merged in mature projects.</li>
+                    <li><strong>Be patient:</strong> Maintainers are often volunteers. Give them time to review.</li>
+                </ul>
+
+                <h2>Getting Started with Open Source</h2>
+                <p>If you want to start contributing to open source:</p>
+                <ol>
+                    <li>Pick a project you actually use and care about</li>
+                    <li>Start by reading issues labeled "good first issue" or "help wanted"</li>
+                    <li>Set up the development environment and run the tests</li>
+                    <li>Understand the codebase by reading existing PRs and commits</li>
+                    <li>Start with documentation fixes or small bug fixes</li>
+                    <li>Gradually take on larger features as you become familiar with the codebase</li>
+                </ol>
+
+                <h2>What's Next?</h2>
+                <p>
+                    I'm continuing to contribute to Spring AI and exploring other projects in the Spring ecosystem. 
+                    Open source has been a rewarding way to learn, connect with other developers, and give back to the community.
+                </p>
+                <p>
+                    Check out my PRs: <a href="https://github.com/spring-projects/spring-ai/pulls?q=author%3Aranjitm2001" target="_blank">Spring AI PRs</a>
+                </p>
+            </div>
+        </div>
+    </article>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2024 Ranjith Muniyappa. Built with passion.</p>
+        </div>
+    </footer>
+
+    <script>
+    function initTheme() {
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+    }
+    function toggleTheme() {
+        const currentTheme = document.documentElement.getAttribute('data-theme');
+        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', newTheme);
+        localStorage.setItem('theme', newTheme);
+    }
+    initTheme();
+    document.querySelector('.nav-toggle').addEventListener('click', () => {
+        document.querySelector('.nav-menu').classList.toggle('active');
+    });
+    document.querySelectorAll('.theme-toggle').forEach(btn => {
+        btn.addEventListener('click', toggleTheme);
+    });
+    </script>
+</body>
+</html>

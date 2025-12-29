@@ -78,30 +78,34 @@
         {
             title: "Contributing to Spring AI: My Open Source Journey",
             date: "December 29, 2024",
+            readTime: "5 min read",
             tags: ["Open Source", "Spring AI", "Java"],
             excerpt: "How I submitted 4 PRs to Spring AI and learned about AI integration in the Spring ecosystem. Tips for getting started with open source contributions.",
-            slug: "spring-ai-contributions"
+            url: "blog/spring-ai-contributions.html"
         },
         {
             title: "Adding UDP Port Mapping to Testcontainers",
             date: "December 29, 2024",
+            readTime: "6 min read",
             tags: ["Open Source", "Testcontainers", "Docker"],
             excerpt: "Deep dive into implementing UDP protocol support for getMappedPort in Testcontainers Java. Understanding Docker networking and container port mapping.",
-            slug: "testcontainers-udp-support"
+            url: "blog/testcontainers-udp-support.html"
         },
         {
             title: "Building Scalable ETL Pipelines with Spark",
             date: "December 2024",
+            readTime: "8 min read",
             tags: ["Data Engineering", "Spark", "AWS"],
             excerpt: "Lessons learned from building ETL pipelines that process 250M+ records. Optimization techniques that achieved 3x improvement in processing speed.",
-            slug: "scalable-etl-pipelines"
+            url: "blog/scalable-etl-pipelines.html"
         },
         {
             title: "From Mechanical Engineering to Software: My Career Journey",
             date: "November 2024",
+            readTime: "7 min read",
             tags: ["Career", "Engineering"],
             excerpt: "How I transitioned from a Mechanical Engineering degree at NITK to becoming an Engineering Lead in software. Key lessons and pivotal moments.",
-            slug: "career-journey"
+            url: "blog/career-journey.html"
         }
     ];
 
@@ -109,18 +113,22 @@
     function renderBlogPosts() {
         const container = document.getElementById('blog-posts');
         container.innerHTML = blogPosts.map(post => `
-            <article class="blog-card">
-                <div class="blog-card-content">
-                    <div class="blog-meta">
-                        <span class="blog-date"><i class="far fa-calendar"></i> ${post.date}</span>
+            <a href="${post.url}" class="blog-card-link">
+                <article class="blog-card">
+                    <div class="blog-card-content">
+                        <div class="blog-meta">
+                            <span class="blog-date"><i class="far fa-calendar"></i> ${post.date}</span>
+                            <span class="blog-date"><i class="far fa-clock"></i> ${post.readTime}</span>
+                        </div>
+                        <h2 class="blog-title">${post.title}</h2>
+                        <p class="blog-excerpt">${post.excerpt}</p>
+                        <div class="blog-tags">
+                            ${post.tags.map(tag => `<span class="blog-tag">${tag}</span>`).join('')}
+                        </div>
+                        <span class="read-more">Read more <i class="fas fa-arrow-right"></i></span>
                     </div>
-                    <h2 class="blog-title">${post.title}</h2>
-                    <p class="blog-excerpt">${post.excerpt}</p>
-                    <div class="blog-tags">
-                        ${post.tags.map(tag => `<span class="blog-tag">${tag}</span>`).join('')}
-                    </div>
-                </div>
-            </article>
+                </article>
+            </a>
         `).join('');
     }
 
