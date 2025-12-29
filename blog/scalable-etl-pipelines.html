@@ -45,7 +45,7 @@
             <header class="post-header">
                 <h1>Building Scalable ETL Pipelines with Spark</h1>
                 <div class="post-meta">
-                    <span><i class="far fa-calendar"></i> December 2024</span>
+                    <span><i class="far fa-calendar"></i> December 2025</span>
                     <span><i class="far fa-clock"></i> 8 min read</span>
                 </div>
                 <div class="blog-tags">
@@ -131,7 +131,7 @@ df.coalesce(num_partitions).write.parquet(output_path)</code></pre>
                 </p>
                 <pre><code># Filter is pushed to Parquet reader
 df = spark.read.parquet("s3://bucket/data/") \
-    .filter(col("date") >= "2024-01-01") \
+    .filter(col("date") >= "2025-01-01") \
     .filter(col("status") == "ACTIVE")</code></pre>
 
                 <h2>Handling Data Quality</h2>
@@ -219,7 +219,7 @@ invalid_records = df_with_errors.filter(size("validation_errors") > 0)</code></p
 
     <footer class="footer">
         <div class="container">
-            <p>&copy; 2024 Ranjith Muniyappa. Built with passion.</p>
+            <p>&copy; 2025 Ranjith Muniyappa. Built with passion.</p>
         </div>
     </footer>
 
