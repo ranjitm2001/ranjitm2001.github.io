@@ -785,3 +785,79 @@ body {
         gap: 0.5rem;
     }
 }
+
+/* Improved Blog Post Spacing & Tables */
+.post-content h2:first-of-type {
+    margin-top: 0;
+}
+
+.post-content ul, .post-content ol {
+    padding-left: 1.5rem;
+    margin: 1.25rem 0 1.75rem;
+}
+
+.post-content li {
+    margin-bottom: 0.75rem;
+    padding-left: 0.5rem;
+}
+
+.post-content table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 2rem 0;
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.post-content th {
+    background: var(--bg-card);
+    font-weight: 600;
+    color: var(--text-primary);
+    padding: 1rem 1.25rem;
+    text-align: left;
+    border: 1px solid var(--border);
+    border-bottom: 2px solid var(--primary);
+}
+
+.post-content td {
+    padding: 1rem 1.25rem;
+    color: var(--text-secondary);
+    border: 1px solid var(--border);
+    background: var(--bg-dark);
+}
+
+.post-content tr:hover td {
+    background: var(--bg-card);
+}
+
+.post-content pre {
+    margin: 2rem 0;
+    padding: 1.5rem;
+}
+
+.post-content p + ul,
+.post-content p + ol {
+    margin-top: 0.5rem;
+}
+
+.post-content h3 + p {
+    margin-top: 0.5rem;
+}
+
+.post-header {
+    margin-bottom: 2.5rem;
+}
+
+/* Blog card spacing */
+.blog-card-content {
+    padding: 2rem;
+}
+
+.blog-excerpt {
+    margin-bottom: 1.25rem;
+}
+
+.blog-tags {
+    margin-bottom: 1rem;
+}
