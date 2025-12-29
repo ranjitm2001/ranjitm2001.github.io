@@ -1,3 +1,19 @@
+// Theme Toggle
+function initTheme() {
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+}
+
+function toggleTheme() {
+    const currentTheme = document.documentElement.getAttribute('data-theme');
+    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', newTheme);
+    localStorage.setItem('theme', newTheme);
+}
+
+// Initialize theme before page renders
+initTheme();
+
 // Experience Data
 const experiences = [
     {
@@ -186,6 +202,11 @@ document.querySelectorAll('.nav-menu a').forEach(link => {
     link.addEventListener('click', () => {
         document.querySelector('.nav-menu').classList.remove('active');
     });
+});
+
+// Theme toggle buttons
+document.querySelectorAll('.theme-toggle').forEach(btn => {
+    btn.addEventListener('click', toggleTheme);
 });
 
 // Initialize
